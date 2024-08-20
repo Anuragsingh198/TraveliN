@@ -1,5 +1,5 @@
 const { OAuth2Client } = require('google-auth-library');
-
+const jwt = require('jsonwebtoken');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const auth = async (req, res, next) => {
@@ -14,11 +14,13 @@ const auth = async (req, res, next) => {
             });
 
             const payload = ticket.getPayload();
-
             req.user = { id: payload.sub, name: payload.name, photoUrl: payload.picture };
         } else {
-            // Handle custom token here
+            const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+            const { id, name, photoUrl } = decodedToken;
+            req.user = { id, name, photoUrl };
         }
+
         next();
     } catch (error) {
         console.log(error);
@@ -27,3 +29,4 @@ const auth = async (req, res, next) => {
 };
 
 module.exports = auth;
+ 
